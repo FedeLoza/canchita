@@ -280,7 +280,7 @@
     <main>
       <h1>⚽ Armá los equipos</h1>
       <div class="row">
-        <button class="mode" data-m="5">Fútbol 5</button>
+        <button class="mode" data-m="5">Fútbol 6</button>
         <button class="mode" data-m="8">Fútbol 8</button>
         <button id="dl" hidden style="margin-left: auto">
           ⬇ Descargar Cancha
@@ -330,11 +330,12 @@
       var ZONE = { GK: 6, DEF: 19, MED: 32, DEL: 43 };
       var TEAMS = { 1: "Equipo Lucho", 2: "Equipo Albiceleste" };
       var SLOTS = {
-        5: [
+        6: [
           ["GK", 50, 6],
           ["DEF", 28, 19],
           ["DEF", 72, 19],
           ["MED", 50, 32],
+          ["MED", 72, 32],
           ["DEL", 50, 43],
         ],
         8: [
@@ -348,7 +349,7 @@
           ["DEL", 50, 43],
         ],
       };
-      var S = { mode: 5, players: [], next: 1 };
+      var S = { mode: 6, players: [], next: 1 };
       try {
         var raw = localStorage.getItem("cancha2");
         if (raw) {
