@@ -579,19 +579,6 @@
       field.addEventListener("pointerup", end);
       field.addEventListener("pointercancel", end);
 
-      var dlApi = null;
-      if (window.claude && claude.use) {
-        claude
-          .use("downloads")
-          .then(function (d) {
-            if (d) {
-              dlApi = d;
-              $("dl").hidden = false;
-            }
-          })
-          .catch(function () {});
-      }
-
       function drawPng() {
         var W = 800,
           H = 1200,
@@ -719,22 +706,30 @@
         });
         return c;
       }
+
+      $("dl").hidden = false;
+
       $("dl").onclick = function () {
-        if (!dlApi) return;
-        drawPng().toBlob(function (b) {
-          if (!b) {
+        var canvas = drawPng();
+
+        canvas.toBlob(function (blob) {
+          if (!blob) {
             say("No se pudo generar la imagen.");
             return;
           }
-          dlApi
-            .save({ filename: "cancha.png", data: b })
-            .then(function () {
-              say("");
-            })
-            .catch(function (e) {
-              if (!e || e.code !== "declined")
-                say("No se pudo descargar la imagen.");
-            });
+
+          var url = URL.createObjectURL(blob);
+          var a = document.createElement("a");
+
+          a.href = url;
+          a.download = "cancha.png";
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+
+          setTimeout(function () {
+            URL.revokeObjectURL(url);
+          }, 1000);
         }, "image/png");
       };
       render();
