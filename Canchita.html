@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Cancha de fútbol</title>
+    <style>
+      :root {
+        --bg: #f6f7f4;
+        --card: #fff;
+        --tx: #1b1f1a;
+        --mut: #667064;
+        --bd: #dde1d8;
+        --ac: #1f8a3b;
+        --ac2: #fff;
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #121512;
+          --card: #1b1f1a;
+          --tx: #eef1ec;
+          --mut: #9aa496;
+          --bd: #2c322a;
+          --ac: #3fbf5f;
+          --ac2: #08210f;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #121512;
+        --card: #1b1f1a;
+        --tx: #eef1ec;
+        --mut: #9aa496;
+        --bd: #2c322a;
+        --ac: #3fbf5f;
+        --ac2: #08210f;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--tx);
+        font-family:
+          system-ui,
+          -apple-system,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 16px;
+      }
+      h1 {
+        font-size: 1.3rem;
+        margin: 0 0 12px;
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+        color: var(--tx);
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 8px;
+        padding: 8px 12px;
+      }
+      button {
+        cursor: pointer;
+      }
+      .mode.on {
+        background: var(--ac);
+        color: var(--ac2);
+        border-color: var(--ac);
+        font-weight: 600;
+      }
+      input {
+        flex: 1;
+        min-width: 130px;
+      }
+      .add {
+        background: var(--ac);
+        color: var(--ac2);
+        border-color: var(--ac);
+        font-weight: 600;
+      }
+      .msg {
+        color: var(--mut);
+        font-size: 0.85rem;
+        min-height: 1.2em;
+        margin: -4px 0 8px;
+      }
+      .grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: 1fr;
+      }
+      @media (min-width: 760px) {
+        .grid {
+          grid-template-columns: minmax(300px, 420px) 1fr;
+          align-items: start;
+        }
+      }
+      #field {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 2/3;
+        background: repeating-linear-gradient(
+          180deg,
+          #2e9a4a 0 10%,
+          #2a8f44 10% 20%
+        );
+        border: 3px solid #fff;
+        border-radius: 6px;
+        touch-action: none;
+        overflow: hidden;
+        user-select: none;
+      }
+      #field svg {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .p {
+        position: absolute;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        cursor: grab;
+        touch-action: none;
+        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.55));
+      }
+      .p.drag {
+        cursor: grabbing;
+        z-index: 5;
+      }
+      .j {
+        width: 40px;
+        height: 38px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        font-size: 0.9rem;
+        clip-path: polygon(
+          30% 0,
+          70% 0,
+          100% 20%,
+          88% 38%,
+          78% 30%,
+          78% 100%,
+          22% 100%,
+          22% 30%,
+          12% 38%,
+          0 20%
+        );
+        padding-top: 6px;
+      }
+      .j.t1 {
+        background:
+          linear-gradient(
+              90deg,
+              transparent 33%,
+              #f5c400 33% 67%,
+              transparent 67%
+            )
+            top/100% 10% no-repeat,
+          linear-gradient(90deg, #f5c400 0 8%, transparent 8% 92%, #f5c400 92%)
+            no-repeat,
+          #111;
+        color: #f5c400;
+      }
+      .j.t2 {
+        background:
+          linear-gradient(
+            90deg,
+            #0b1f44 0 22%,
+            transparent 22% 78%,
+            #0b1f44 78%
+          ),
+          repeating-conic-gradient(
+            from -70deg at 50% 0%,
+            #fff 0 7deg,
+            #6cc3e0 7deg 14deg,
+            #0b1f44 14deg 21deg
+          );
+        color: #fff;
+        text-shadow:
+          0 0 3px #0b1f44,
+          0 0 3px #0b1f44,
+          0 0 3px #0b1f44;
+      }
+      .n {
+        margin-top: 2px;
+        background: rgba(0, 0, 0, 0.65);
+        color: #fff;
+        font-size: 0.7rem;
+        padding: 1px 6px;
+        border-radius: 6px;
+        white-space: nowrap;
+        max-width: 84px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--bd);
+        border-radius: 10px;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+      }
+      .card h2 {
+        font-size: 1rem;
+        margin: 0 0 4px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .sw {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        display: inline-block;
+        border: 1px solid var(--bd);
+      }
+      .sw1 {
+        background: linear-gradient(90deg, #111 70%, #f5c400 70%);
+      }
+      .sw2 {
+        background: linear-gradient(
+          90deg,
+          #fff 33%,
+          #6cc3e0 33% 66%,
+          #0b1f44 66%
+        );
+      }
+      .item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 0;
+        border-bottom: 1px solid var(--bd);
+      }
+      .item:last-child {
+        border: 0;
+      }
+      .item .nm {
+        flex: 1;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .mut {
+        color: var(--mut);
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>⚽ Armá los equipos</h1>
+      <div class="row">
+        <button class="mode" data-m="5">Fútbol 5</button>
+        <button class="mode" data-m="8">Fútbol 8</button>
+        <button id="dl" hidden style="margin-left: auto">
+          ⬇ Descargar Cancha
+        </button>
+      </div>
+      <div class="row">
+        <input id="name" placeholder="Nombre del jugador" maxlength="20" />
+        <select id="team">
+          <option value="1">Equipo Negro</option>
+          <option value="2">Equipo Albiceleste</option>
+        </select>
+        <button class="add" id="add">Agregar</button>
+      </div>
+      <div class="msg" id="msg"></div>
+      <div class="grid">
+        <div id="field">
+          <svg
+            viewBox="0 0 200 300"
+            preserveAspectRatio="none"
+            fill="none"
+            stroke="#fff"
+            stroke-width="1.5"
+          >
+            <rect x="3" y="3" width="194" height="294" />
+            <line x1="3" y1="150" x2="197" y2="150" />
+            <circle cx="100" cy="150" r="24" />
+            <rect x="55" y="3" width="90" height="42" />
+            <rect x="55" y="255" width="90" height="42" />
+            <rect x="80" y="3" width="40" height="14" />
+            <rect x="80" y="283" width="40" height="14" />
+          </svg>
+        </div>
+        <div id="lists"></div>
+      </div>
+      <p class="mut">
+        Arrastrá a los jugadores sobre la cancha o cambiá su posición desde la
+        lista.
+      </p>
+    </main>
+    <script>
+      var ROLES = {
+        GK: "Arquero",
+        DEF: "Defensor",
+        MED: "Mediocampista",
+        DEL: "Delantero",
+      };
+      var ZONE = { GK: 6, DEF: 19, MED: 32, DEL: 43 };
+      var TEAMS = { 1: "Equipo Negro", 2: "Equipo Albiceleste" };
+      var SLOTS = {
+        5: [
+          ["GK", 50, 6],
+          ["DEF", 28, 19],
+          ["DEF", 72, 19],
+          ["MED", 50, 32],
+          ["DEL", 50, 43],
+        ],
+        8: [
+          ["GK", 50, 6],
+          ["DEF", 20, 18],
+          ["DEF", 50, 18],
+          ["DEF", 80, 18],
+          ["MED", 20, 31],
+          ["MED", 50, 31],
+          ["MED", 80, 31],
+          ["DEL", 50, 43],
+        ],
+      };
+      var S = { mode: 5, players: [], next: 1 };
+      try {
+        var raw = localStorage.getItem("cancha2");
+        if (raw) {
+          var d = JSON.parse(raw);
+          if (d && d.players) {
+            S = d;
+          }
+        }
+      } catch (e) {}
+      function save() {
+        try {
+          localStorage.setItem("cancha2", JSON.stringify(S));
+        } catch (e) {}
+      }
+      var $ = function (i) {
+        return document.getElementById(i);
+      };
+      var field = $("field");
+      function say(t) {
+        $("msg").textContent = t || "";
+      }
+      function esc(s) {
+        return s.replace(/[&<>"]/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+        });
+      }
+      function of(t) {
+        return S.players.filter(function (p) {
+          return p.team === t;
+        });
+      }
+      function yFor(t, along) {
+        return t === 1 ? along : 100 - along;
+      }
+
+      function render() {
+        document.querySelectorAll(".mode").forEach(function (b) {
+          b.classList.toggle("on", +b.dataset.m === S.mode);
+        });
+        field.querySelectorAll(".p").forEach(function (e) {
+          e.remove();
+        });
+        var h = "";
+        [1, 2].forEach(function (t) {
+          var ps = of(t);
+          ps.forEach(function (p, i) {
+            var d = document.createElement("div");
+            d.className = "p";
+            d.style.left = p.x + "%";
+            d.style.top = p.y + "%";
+            d.dataset.id = p.id;
+            d.innerHTML =
+              '<div class="j t' +
+              t +
+              '">' +
+              (i + 1) +
+              '</div><div class="n">' +
+              esc(p.name) +
+              "</div>";
+            field.appendChild(d);
+          });
+          h +=
+            '<div class="card"><h2><span class="sw sw' +
+            t +
+            '"></span>' +
+            TEAMS[t] +
+            ' <span class="mut">' +
+            ps.length +
+            " / " +
+            S.mode +
+            "</span></h2>";
+          h +=
+            ps
+              .map(function (p, i) {
+                return (
+                  '<div class="item"><span class="mut">' +
+                  (i + 1) +
+                  '</span><span class="nm">' +
+                  esc(p.name) +
+                  "</span>" +
+                  '<select data-id="' +
+                  p.id +
+                  '">' +
+                  Object.keys(ROLES)
+                    .map(function (k) {
+                      return (
+                        '<option value="' +
+                        k +
+                        '"' +
+                        (k === p.role ? " selected" : "") +
+                        ">" +
+                        ROLES[k] +
+                        "</option>"
+                      );
+                    })
+                    .join("") +
+                  "</select>" +
+                  '<button data-del="' +
+                  p.id +
+                  '" aria-label="Quitar">✕</button></div>'
+                );
+              })
+              .join("") || '<div class="item mut">Sin jugadores.</div>';
+          h += "</div>";
+        });
+        $("lists").innerHTML = h;
+      }
+
+      function addPlayer() {
+        var n = $("name").value.trim(),
+          t = +$("team").value;
+        if (!n) {
+          say("Escribí un nombre.");
+          return;
+        }
+        var ps = of(t);
+        if (ps.length >= S.mode) {
+          say(TEAMS[t] + " ya está completo para fútbol " + S.mode + ".");
+          return;
+        }
+        var sl = SLOTS[S.mode][ps.length];
+        S.players.push({
+          id: S.next++,
+          team: t,
+          name: n,
+          role: sl[0],
+          x: sl[1],
+          y: yFor(t, sl[2]),
+        });
+        $("name").value = "";
+        say("");
+        save();
+        render();
+        $("name").focus();
+      }
+      $("add").onclick = addPlayer;
+      $("name").onkeydown = function (e) {
+        if (e.key === "Enter") addPlayer();
+      };
+
+      document.querySelectorAll(".mode").forEach(function (b) {
+        b.onclick = function () {
+          var m = +b.dataset.m;
+          S.mode = m;
+          var q = 0;
+          [1, 2].forEach(function (t) {
+            var keep = 0;
+            S.players = S.players.filter(function (p) {
+              if (p.team !== t) return true;
+              keep++;
+              if (keep > m) {
+                q++;
+                return false;
+              }
+              return true;
+            });
+          });
+          say(
+            q
+              ? "Se quitaron " +
+                  q +
+                  " jugador(es) por exceder el límite de fútbol " +
+                  m +
+                  "."
+              : "",
+          );
+          save();
+          render();
+        };
+      });
+
+      $("lists").onclick = function (e) {
+        var id = e.target.dataset.del;
+        if (!id) return;
+        S.players = S.players.filter(function (p) {
+          return p.id != id;
+        });
+        save();
+        say("");
+        render();
+      };
+      $("lists").onchange = function (e) {
+        var id = e.target.dataset.id;
+        if (!id) return;
+        var p = S.players.find(function (q) {
+          return q.id == id;
+        });
+        p.role = e.target.value;
+        p.y = yFor(p.team, ZONE[p.role]);
+        save();
+        render();
+      };
+
+      var drag = null;
+      field.addEventListener("pointerdown", function (e) {
+        var t = e.target.closest(".p");
+        if (!t) return;
+        drag = t;
+        t.classList.add("drag");
+        t.setPointerCapture(e.pointerId);
+        e.preventDefault();
+      });
+      field.addEventListener("pointermove", function (e) {
+        if (!drag) return;
+        var r = field.getBoundingClientRect();
+        var x = Math.max(
+          6,
+          Math.min(94, ((e.clientX - r.left) / r.width) * 100),
+        );
+        var y = Math.max(
+          5,
+          Math.min(93, ((e.clientY - r.top) / r.height) * 100),
+        );
+        drag.style.left = x + "%";
+        drag.style.top = y + "%";
+        var p = S.players.find(function (q) {
+          return q.id == drag.dataset.id;
+        });
+        p.x = x;
+        p.y = y;
+      });
+      function end() {
+        if (!drag) return;
+        drag.classList.remove("drag");
+        drag = null;
+        save();
+      }
+      field.addEventListener("pointerup", end);
+      field.addEventListener("pointercancel", end);
+
+      var dlApi = null;
+      if (window.claude && claude.use) {
+        claude
+          .use("downloads")
+          .then(function (d) {
+            if (d) {
+              dlApi = d;
+              $("dl").hidden = false;
+            }
+          })
+          .catch(function () {});
+      }
+
+      function drawPng() {
+        var W = 800,
+          H = 1200,
+          k = W / field.clientWidth;
+        var c = document.createElement("canvas");
+        c.width = W;
+        c.height = H;
+        var x = c.getContext("2d");
+        for (var i = 0; i < 10; i++) {
+          x.fillStyle = i % 2 ? "#2a8f44" : "#2e9a4a";
+          x.fillRect(0, (i * H) / 10, W, H / 10);
+        }
+        x.save();
+        x.scale(W / 200, H / 300);
+        x.strokeStyle = "#fff";
+        x.lineWidth = 1.5;
+        x.strokeRect(3, 3, 194, 294);
+        x.beginPath();
+        x.moveTo(3, 150);
+        x.lineTo(197, 150);
+        x.stroke();
+        x.beginPath();
+        x.arc(100, 150, 24, 0, 7);
+        x.stroke();
+        x.strokeRect(55, 3, 90, 42);
+        x.strokeRect(55, 255, 90, 42);
+        x.strokeRect(80, 3, 40, 14);
+        x.strokeRect(80, 283, 40, 14);
+        x.restore();
+        var pts = [
+          [0.3, 0],
+          [0.7, 0],
+          [1, 0.2],
+          [0.88, 0.38],
+          [0.78, 0.3],
+          [0.78, 1],
+          [0.22, 1],
+          [0.22, 0.3],
+          [0.12, 0.38],
+          [0, 0.2],
+        ];
+        S.players.forEach(function (p) {
+          var n = of(p.team).indexOf(p) + 1,
+            w = 40 * k,
+            h = 38 * k,
+            left = (p.x / 100) * W - w / 2,
+            top = (p.y / 100) * H - 28 * k;
+          function jp() {
+            x.beginPath();
+            pts.forEach(function (q, i) {
+              x[i ? "lineTo" : "moveTo"](left + q[0] * w, top + q[1] * h);
+            });
+            x.closePath();
+          }
+          x.save();
+          jp();
+          x.shadowColor = "rgba(0,0,0,.55)";
+          x.shadowBlur = 3 * k;
+          x.shadowOffsetY = k;
+          x.fillStyle = "#111";
+          x.fill();
+          x.restore();
+          x.save();
+          jp();
+          x.clip();
+          if (p.team === 1) {
+            x.fillStyle = "#111";
+            x.fillRect(left, top, w, h);
+            x.fillStyle = "#f5c400";
+            x.fillRect(left + 0.34 * w, top, 0.32 * w, 0.1 * h);
+            x.fillRect(left, top, 0.08 * w, h);
+            x.fillRect(left + 0.92 * w, top, 0.08 * w, h);
+          } else {
+            x.fillStyle = "#fff";
+            x.fillRect(left, top, w, h);
+            var ox = left + w / 2,
+              oy = top,
+              cols = ["#fff", "#6cc3e0", "#0b1f44"];
+            for (var a = 0; a < 52; a++) {
+              x.fillStyle = cols[a % 3];
+              var s = ((-70 + a * 7 - 90) * Math.PI) / 180;
+              x.beginPath();
+              x.moveTo(ox, oy);
+              x.arc(ox, oy, w * 2, s, s + (7 * Math.PI) / 180 + 0.01);
+              x.closePath();
+              x.fill();
+            }
+            x.fillStyle = "#0b1f44";
+            x.fillRect(left, top, 0.22 * w, h);
+            x.fillRect(left + 0.78 * w, top, 0.22 * w, h);
+          }
+          x.restore();
+          x.font = "800 " + 14.4 * k + "px system-ui,sans-serif";
+          x.textAlign = "center";
+          x.textBaseline = "middle";
+          var cy = top + 22 * k,
+            cx = left + w / 2;
+          if (p.team === 1) {
+            x.fillStyle = "#f5c400";
+            x.fillText(n, cx, cy);
+          } else {
+            x.lineJoin = "round";
+            x.strokeStyle = "#0b1f44";
+            x.lineWidth = 3 * k;
+            x.strokeText(n, cx, cy);
+            x.fillStyle = "#fff";
+            x.fillText(n, cx, cy);
+          }
+          x.font = "500 " + 11.2 * k + "px system-ui,sans-serif";
+          var t = p.name;
+          while (t.length > 1 && x.measureText(t).width > 72 * k)
+            t = t.slice(0, -1);
+          if (t !== p.name) t += "…";
+          var lw = x.measureText(t).width + 12 * k,
+            lh = 15 * k,
+            lx = cx - lw / 2,
+            ly = top + h + 2 * k;
+          x.fillStyle = "rgba(0,0,0,.65)";
+          x.beginPath();
+          if (x.roundRect) x.roundRect(lx, ly, lw, lh, 6 * k);
+          else x.rect(lx, ly, lw, lh);
+          x.fill();
+          x.fillStyle = "#fff";
+          x.fillText(t, cx, ly + lh / 2 + k * 0.5);
+        });
+        return c;
+      }
+      $("dl").onclick = function () {
+        if (!dlApi) return;
+        drawPng().toBlob(function (b) {
+          if (!b) {
+            say("No se pudo generar la imagen.");
+            return;
+          }
+          dlApi
+            .save({ filename: "cancha.png", data: b })
+            .then(function () {
+              say("");
+            })
+            .catch(function (e) {
+              if (!e || e.code !== "declined")
+                say("No se pudo descargar la imagen.");
+            });
+        }, "image/png");
+      };
+      render();
+    </script>
+  </body>
+</html>
